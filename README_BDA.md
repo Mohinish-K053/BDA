@@ -55,7 +55,6 @@
 ```python
 !pip install numpy pandas matplotlib scipy seaborn scikit-learn --quiet
 
-# ── IMPORTS ────────────────────────────────────────────────
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -64,19 +63,17 @@ from scipy import stats
 from sklearn.datasets import load_iris
 
 
-# ── LOAD IRIS DATASET ──────────────────────────────────────
 iris = load_iris()
 df = pd.DataFrame(iris.data, columns=['sepal_length', 'sepal_width',
                                        'petal_length', 'petal_width'])
 df['species'] = pd.Categorical.from_codes(iris.target, iris.target_names)
 
-# Use sepal_length for univariate analysis
 data = df['sepal_length'].values
 feature_name = 'Sepal Length (cm)'
 
-print(f"\n📦 Iris Dataset loaded: {df.shape[0]} samples, {df.shape[1]} features")
+print(f"\n Iris Dataset loaded: {df.shape[0]} samples, {df.shape[1]} features")
 
-print("\n📊 Descriptive Statistics (Sepal Length):")
+print("\n Descriptive Statistics (Sepal Length):")
 print(df[['sepal_length']].describe().round(3))
 print(f"  Skewness : {df['sepal_length'].skew():.4f}")
 print(f"  Kurtosis : {df['sepal_length'].kurt():.4f}")
@@ -84,7 +81,6 @@ print(f"  Kurtosis : {df['sepal_length'].kurt():.4f}")
 fig, axes = plt.subplots(2, 2, figsize=(14, 10))
 fig.suptitle('Iris Dataset — Univariate Analysis: PDF, CDF, Box & Violin', fontsize=16, fontweight='bold')
 
-# 1. Histogram + PDF
 ax = axes[0, 0]
 ax.hist(data, bins=20, density=True, alpha=0.6, color='steelblue', label='Histogram')
 kde = stats.gaussian_kde(data)
@@ -94,7 +90,6 @@ ax.set_title(f'Histogram + Probability Density Function\n({feature_name})')
 ax.set_xlabel(feature_name); ax.set_ylabel('Density')
 ax.legend()
 
-# 2. CDF
 ax = axes[0, 1]
 sorted_data = np.sort(data)
 cdf = np.arange(1, len(sorted_data)+1) / len(sorted_data)
@@ -103,7 +98,6 @@ ax.set_title(f'Cumulative Distribution Function (CDF)\n({feature_name})')
 ax.set_xlabel(feature_name); ax.set_ylabel('Cumulative Probability')
 ax.grid(True, alpha=0.3)
 
-# 3. Boxplot per species
 ax = axes[1, 0]
 species_data = [df[df['species'] == sp]['sepal_length'].values for sp in iris.target_names]
 bp = ax.boxplot(species_data, vert=True, patch_artist=True,
@@ -113,7 +107,6 @@ bp = ax.boxplot(species_data, vert=True, patch_artist=True,
 ax.set_title('Box Plot — Sepal Length by Species')
 ax.set_ylabel(feature_name)
 
-# 4. Violin Plot per species
 ax = axes[1, 1]
 ax.violinplot(species_data, showmedians=True)
 ax.set_xticks([1, 2, 3])
