@@ -53,12 +53,7 @@
 ---
 
 ```python
-# ============================================================
-# ASSIGNMENT 1: EDA — PDF, CDF, Univariate Analysis
-# ============================================================
-
-# ── INSTALL (run this cell first) ──────────────────────────
-!pip install numpy pandas matplotlib scipy seaborn --quiet
+!pip install numpy pandas matplotlib scipy seaborn scikit-learn --quiet
 
 # ── IMPORTS ────────────────────────────────────────────────
 import numpy as np
@@ -66,34 +61,37 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 from scipy import stats
+from sklearn.datasets import load_iris
 
 
-# ── DATA GENERATION ────────────────────────────────────────
-np.random.seed(42)
-data = np.concatenate([
-    np.random.normal(loc=50, scale=10, size=500),
-    np.random.normal(loc=80, scale=5,  size=200)
-])
-df = pd.DataFrame({'value': data})
+# ── LOAD IRIS DATASET ──────────────────────────────────────
+iris = load_iris()
+df = pd.DataFrame(iris.data, columns=['sepal_length', 'sepal_width',
+                                       'petal_length', 'petal_width'])
+df['species'] = pd.Categorical.from_codes(iris.target, iris.target_names)
 
-# ── DESCRIPTIVE STATISTICS ─────────────────────────────────
-print("\n📊 Descriptive Statistics:")
-print(df.describe().round(3))
-print(f"  Skewness : {df['value'].skew():.4f}")
-print(f"  Kurtosis : {df['value'].kurt():.4f}")
+# Use sepal_length for univariate analysis
+data = df['sepal_length'].values
+feature_name = 'Sepal Length (cm)'
 
-# ── FIGURE SETUP ───────────────────────────────────────────
+print(f"\n📦 Iris Dataset loaded: {df.shape[0]} samples, {df.shape[1]} features")
+
+print("\n📊 Descriptive Statistics (Sepal Length):")
+print(df[['sepal_length']].describe().round(3))
+print(f"  Skewness : {df['sepal_length'].skew():.4f}")
+print(f"  Kurtosis : {df['sepal_length'].kurt():.4f}")
+
 fig, axes = plt.subplots(2, 2, figsize=(14, 10))
-fig.suptitle('Univariate Analysis — PDF, CDF, Box & Violin', fontsize=16, fontweight='bold')
+fig.suptitle('Iris Dataset — Univariate Analysis: PDF, CDF, Box & Violin', fontsize=16, fontweight='bold')
 
 # 1. Histogram + PDF
 ax = axes[0, 0]
-ax.hist(data, bins=40, density=True, alpha=0.6, color='steelblue', label='Histogram')
+ax.hist(data, bins=20, density=True, alpha=0.6, color='steelblue', label='Histogram')
 kde = stats.gaussian_kde(data)
 x_range = np.linspace(data.min(), data.max(), 300)
 ax.plot(x_range, kde(x_range), 'r-', linewidth=2, label='PDF (KDE)')
-ax.set_title('Histogram + Probability Density Function')
-ax.set_xlabel('Value'); ax.set_ylabel('Density')
+ax.set_title(f'Histogram + Probability Density Function\n({feature_name})')
+ax.set_xlabel(feature_name); ax.set_ylabel('Density')
 ax.legend()
 
 # 2. CDF
@@ -101,23 +99,27 @@ ax = axes[0, 1]
 sorted_data = np.sort(data)
 cdf = np.arange(1, len(sorted_data)+1) / len(sorted_data)
 ax.plot(sorted_data, cdf, color='darkorange', linewidth=2)
-ax.set_title('Cumulative Distribution Function (CDF)')
-ax.set_xlabel('Value'); ax.set_ylabel('Cumulative Probability')
+ax.set_title(f'Cumulative Distribution Function (CDF)\n({feature_name})')
+ax.set_xlabel(feature_name); ax.set_ylabel('Cumulative Probability')
 ax.grid(True, alpha=0.3)
 
-# 3. Boxplot
+# 3. Boxplot per species
 ax = axes[1, 0]
-ax.boxplot(data, vert=True, patch_artist=True,
-           boxprops=dict(facecolor='lightcyan', color='navy'),
-           medianprops=dict(color='red', linewidth=2))
-ax.set_title('Box Plot')
-ax.set_ylabel('Value')
+species_data = [df[df['species'] == sp]['sepal_length'].values for sp in iris.target_names]
+bp = ax.boxplot(species_data, vert=True, patch_artist=True,
+                labels=iris.target_names,
+                boxprops=dict(facecolor='lightcyan', color='navy'),
+                medianprops=dict(color='red', linewidth=2))
+ax.set_title('Box Plot — Sepal Length by Species')
+ax.set_ylabel(feature_name)
 
-# 4. Violin Plot
+# 4. Violin Plot per species
 ax = axes[1, 1]
-ax.violinplot(data, showmedians=True)
-ax.set_title('Violin Plot')
-ax.set_ylabel('Value')
+ax.violinplot(species_data, showmedians=True)
+ax.set_xticks([1, 2, 3])
+ax.set_xticklabels(iris.target_names)
+ax.set_title('Violin Plot — Sepal Length by Species')
+ax.set_ylabel(feature_name)
 
 plt.tight_layout()
 plt.savefig('assignment1_eda.png', dpi=150, bbox_inches='tight')
@@ -148,83 +150,87 @@ plt.show()
 ---
 
 ```python
-# ============================================================
-# ASSIGNMENT 2: Distribution-Based Problem Statements
-# ============================================================
 
-# ── INSTALL ────────────────────────────────────────────────
-!pip install numpy pandas matplotlib scipy --quiet
+!pip install numpy pandas matplotlib scipy scikit-learn --quiet
 
-# ── IMPORTS ────────────────────────────────────────────────
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from scipy import stats
+from sklearn.datasets import load_iris
 
 
-mu, sigma = 65, 12
+iris = load_iris()
+df = pd.DataFrame(iris.data, columns=['sepal_length', 'sepal_width',
+                                       'petal_length', 'petal_width'])
+df['species_id'] = iris.target
+df['species']    = pd.Categorical.from_codes(iris.target, iris.target_names)
+print(f"📦 Iris Dataset loaded: {df.shape}")
+
+
+sl = df['sepal_length']
+mu, sigma = sl.mean(), sl.std()
 dist_norm = stats.norm(mu, sigma)
 
-p_above_80 = 1 - dist_norm.cdf(80)
-p_below_50 = dist_norm.cdf(50)
-p_between  = dist_norm.cdf(80) - dist_norm.cdf(50)
+p_above_65 = 1 - dist_norm.cdf(6.5)
+p_below_50 = dist_norm.cdf(5.0)
+p_between  = dist_norm.cdf(6.5) - dist_norm.cdf(5.0)
 
-print(f"  Mean={mu}, Std={sigma}")
-print(f"  P(score > 80)       = {p_above_80:.4f}  ({p_above_80*100:.2f}%)")
-print(f"  P(score < 50)       = {p_below_50:.4f}  ({p_below_50*100:.2f}%)")
-print(f"  P(50 < score < 80)  = {p_between:.4f}  ({p_between*100:.2f}%)")
+print(f"  Mean={mu:.3f} cm, Std={sigma:.3f} cm")
+print(f"  P(sepal_length > 6.5)          = {p_above_65:.4f}  ({p_above_65*100:.2f}%)")
+print(f"  P(sepal_length < 5.0)          = {p_below_50:.4f}  ({p_below_50*100:.2f}%)")
+print(f"  P(5.0 < sepal_length < 6.5)    = {p_between:.4f}  ({p_between*100:.2f}%)")
+
+stat_sw, p_sw = stats.shapiro(sl)
+print(f"  Shapiro-Wilk test: stat={stat_sw:.4f}, p={p_sw:.4f}")
+print(f"  Normal? {'Yes' if p_sw > 0.05 else 'No (p < 0.05)'}")
 
 
-lam = 5
+lam = 5   
 dist_poisson = stats.poisson(lam)
 
 p_exactly_3 = dist_poisson.pmf(3)
 p_more_than_7 = 1 - dist_poisson.cdf(7)
 
-print(f"  Lambda (avg arrivals) = {lam}")
-print(f"  P(exactly 3 arrivals) = {p_exactly_3:.4f}")
-print(f"  P(more than 7)        = {p_more_than_7:.4f}")
+print(f"  Lambda (expected count) = {lam}")
+print(f"  P(exactly 3 samples)    = {p_exactly_3:.4f}")
+print(f"  P(more than 7 samples)  = {p_more_than_7:.4f}")
 
-# ── VISUALISATION ──────────────────────────────────────────
 fig, axes = plt.subplots(2, 2, figsize=(14, 10))
-fig.suptitle('Assignment 2: Distribution Analysis', fontsize=15, fontweight='bold')
+fig.suptitle('Assignment 2: Distribution Analysis — Iris Dataset', fontsize=15, fontweight='bold')
 
-# Normal PDF
 ax = axes[0, 0]
 x = np.linspace(mu - 4*sigma, mu + 4*sigma, 300)
 ax.plot(x, dist_norm.pdf(x), 'b-', linewidth=2, label='Normal PDF')
-ax.fill_between(x, dist_norm.pdf(x), where=(x > 80), alpha=0.4, color='red', label='P(>80)')
-ax.fill_between(x, dist_norm.pdf(x), where=(x < 50), alpha=0.4, color='green', label='P(<50)')
-ax.axvline(mu, color='black', linestyle='--', label=f'Mean={mu}')
-ax.set_title('Normal Distribution — Exam Scores')
-ax.set_xlabel('Score'); ax.set_ylabel('Density')
+ax.fill_between(x, dist_norm.pdf(x), where=(x > 6.5), alpha=0.4, color='red',   label='P(>6.5)')
+ax.fill_between(x, dist_norm.pdf(x), where=(x < 5.0), alpha=0.4, color='green', label='P(<5.0)')
+ax.axvline(mu, color='black', linestyle='--', label=f'Mean={mu:.2f}')
+ax.set_title('Normal Distribution — Sepal Length')
+ax.set_xlabel('Sepal Length (cm)'); ax.set_ylabel('Density')
 ax.legend(fontsize=8)
 
-# Normal CDF
 ax = axes[0, 1]
 ax.plot(x, dist_norm.cdf(x), 'b-', linewidth=2)
 ax.axhline(0.5, color='gray', linestyle='--', alpha=0.5)
-ax.set_title('Normal Distribution — CDF')
-ax.set_xlabel('Score'); ax.set_ylabel('Cumulative Probability')
+ax.set_title('Normal Distribution — CDF (Sepal Length)')
+ax.set_xlabel('Sepal Length (cm)'); ax.set_ylabel('Cumulative Probability')
 ax.grid(True, alpha=0.3)
 
-# Poisson PMF
 ax = axes[1, 0]
 k_vals = np.arange(0, 16)
 pmf_vals = dist_poisson.pmf(k_vals)
 colors = ['red' if k == 3 else ('orange' if k > 7 else 'steelblue') for k in k_vals]
-bars = ax.bar(k_vals, pmf_vals, color=colors, edgecolor='white')
-ax.set_title('Poisson Distribution — Customer Arrivals\n(red=P(3), orange=P(>7))')
-ax.set_xlabel('Number of Arrivals'); ax.set_ylabel('Probability')
+ax.bar(k_vals, pmf_vals, color=colors, edgecolor='white')
+ax.set_title('Poisson Distribution — Iris Sample Count\n(red=P(3), orange=P(>7))')
+ax.set_xlabel('Number of Samples'); ax.set_ylabel('Probability')
 ax.set_xticks(k_vals)
 
-# Poisson CDF
 ax = axes[1, 1]
 cdf_vals = dist_poisson.cdf(k_vals)
 ax.step(k_vals, cdf_vals, where='post', color='darkorange', linewidth=2)
 ax.axhline(1 - p_more_than_7, color='red', linestyle='--', alpha=0.7, label='CDF at 7')
 ax.set_title('Poisson Distribution — CDF')
-ax.set_xlabel('Number of Arrivals'); ax.set_ylabel('Cumulative Probability')
+ax.set_xlabel('Number of Samples'); ax.set_ylabel('Cumulative Probability')
 ax.legend(); ax.grid(True, alpha=0.3)
 
 plt.tight_layout()
@@ -260,21 +266,23 @@ plt.show()
 ---
 
 ```python
-# ============================================================
-# ASSIGNMENT 3: Hypothesis Testing
-# ============================================================
+!pip install numpy pandas scipy statsmodels matplotlib scikit-learn --quiet
 
-# ── INSTALL ────────────────────────────────────────────────
-!pip install numpy pandas scipy statsmodels matplotlib --quiet
-
-# ── IMPORTS ────────────────────────────────────────────────
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from scipy import stats
 from statsmodels.stats.weightstats import ztest
+from sklearn.datasets import load_iris
 
-np.random.seed(42)
+
+iris = load_iris()
+df = pd.DataFrame(iris.data, columns=['sepal_length', 'sepal_width',
+                                       'petal_length', 'petal_width'])
+df['species_id'] = iris.target
+df['species']    = pd.Categorical.from_codes(iris.target, iris.target_names)
+print(f"📦 Iris Dataset: {df.shape}")
+
 ALPHA = 0.05
 
 def print_result(test_name, stat, p_val, alpha=ALPHA):
@@ -284,64 +292,66 @@ def print_result(test_name, stat, p_val, alpha=ALPHA):
     decision = "✅ Reject H0" if p_val < alpha else "❌ Fail to Reject H0"
     print(f"  Decision  : {decision}  (α = {alpha})")
 
-
-heights = np.random.normal(loc=172, scale=8, size=30)
-t_stat, p_val = stats.ttest_1samp(heights, popmean=170)
-print(f"  Sample mean: {heights.mean():.2f} cm")
+sepal_len = df['sepal_length'].values
+t_stat, p_val = stats.ttest_1samp(sepal_len, popmean=5.8)
+print(f"  Sample mean: {sepal_len.mean():.4f} cm")
 print_result("One-Sample t-test", t_stat, p_val)
 
-group_a = np.random.normal(loc=75, scale=10, size=40)
-group_b = np.random.normal(loc=70, scale=10, size=40)
-t_stat, p_val = stats.ttest_ind(group_a, group_b)
-print(f"  Mean A: {group_a.mean():.2f}  |  Mean B: {group_b.mean():.2f}")
+
+setosa     = df[df['species'] == 'setosa']['sepal_length'].values
+versicolor = df[df['species'] == 'versicolor']['sepal_length'].values
+t_stat, p_val = stats.ttest_ind(setosa, versicolor)
+print(f"  Mean Setosa: {setosa.mean():.4f}  |  Mean Versicolor: {versicolor.mean():.4f}")
 print_result("Independent t-test", t_stat, p_val)
 
-large_sample = np.random.normal(loc=52, scale=15, size=200)
-z_stat, p_val = ztest(large_sample, value=50, alternative='larger')
-print(f"  Sample mean: {large_sample.mean():.2f}")
+
+petal_len = df['petal_length'].values
+z_stat, p_val = ztest(petal_len, value=3.7, alternative='larger')
+print(f"  Sample mean: {petal_len.mean():.4f} cm  |  n = {len(petal_len)}")
 print_result("Z-test (one-tailed)", z_stat, p_val)
 
 
-contingency = np.array([[30, 10, 20],
-                         [15, 25, 10]])
-chi2, p_val, dof, expected = stats.chi2_contingency(contingency)
+df['petal_wide'] = pd.cut(df['petal_width'], bins=[0, 1.0, 2.5],
+                           labels=['narrow', 'wide'])
+contingency = pd.crosstab(df['species'], df['petal_wide']).values
 print(f"  Observed table:\n{contingency}")
+chi2, p_val, dof, expected = stats.chi2_contingency(contingency)
 print(f"  Degrees of Freedom: {dof}")
 print_result("Chi-Square", chi2, p_val)
 
 
-fert_A = np.random.normal(loc=50, scale=5, size=20)
-fert_B = np.random.normal(loc=55, scale=5, size=20)
-fert_C = np.random.normal(loc=52, scale=5, size=20)
-f_stat, p_val = stats.f_oneway(fert_A, fert_B, fert_C)
-print(f"  Means — A:{fert_A.mean():.2f}  B:{fert_B.mean():.2f}  C:{fert_C.mean():.2f}")
+grp_setosa     = df[df['species'] == 'setosa']['petal_length'].values
+grp_versicolor = df[df['species'] == 'versicolor']['petal_length'].values
+grp_virginica  = df[df['species'] == 'virginica']['petal_length'].values
+f_stat, p_val = stats.f_oneway(grp_setosa, grp_versicolor, grp_virginica)
+print(f"  Means — Setosa:{grp_setosa.mean():.3f}  Versicolor:{grp_versicolor.mean():.3f}  Virginica:{grp_virginica.mean():.3f}")
 print_result("One-Way ANOVA (F-test)", f_stat, p_val)
 
-# ── VISUALISATION ──────────────────────────────────────────
+
 fig, axes = plt.subplots(1, 3, figsize=(15, 5))
-fig.suptitle('Assignment 3 — Hypothesis Testing Visuals', fontsize=14, fontweight='bold')
+fig.suptitle('Assignment 3 — Hypothesis Testing on Iris Dataset', fontsize=14, fontweight='bold')
 
-# T-test groups
-axes[0].boxplot([group_a, group_b], labels=['Group A', 'Group B'], patch_artist=True,
+
+axes[0].boxplot([setosa, versicolor], labels=['Setosa', 'Versicolor'], patch_artist=True,
                 boxprops=dict(facecolor='lightblue'))
-axes[0].set_title('Two-Sample t-test\nGroup Comparison')
-axes[0].set_ylabel('Score')
+axes[0].set_title('Two-Sample t-test\nSetosa vs Versicolor (Sepal Length)')
+axes[0].set_ylabel('Sepal Length (cm)')
 
-# Chi-square heatmap
-import matplotlib.colors as mcolors
-im = axes[1].imshow(contingency, cmap='Blues', aspect='auto')
-axes[1].set_xticks([0,1,2]); axes[1].set_xticklabels(['Prod A','Prod B','Prod C'])
-axes[1].set_yticks([0,1]); axes[1].set_yticklabels(['Male','Female'])
-axes[1].set_title('Chi-Square\nContingency Table')
-for i in range(2):
-    for j in range(3):
-        axes[1].text(j, i, contingency[i,j], ha='center', va='center', fontsize=12)
 
-# ANOVA groups
-axes[2].boxplot([fert_A, fert_B, fert_C], labels=['Fert A','Fert B','Fert C'],
+axes[1].imshow(contingency, cmap='Blues', aspect='auto')
+axes[1].set_xticks([0, 1]); axes[1].set_xticklabels(['Narrow', 'Wide'])
+axes[1].set_yticks([0, 1, 2]); axes[1].set_yticklabels(['Setosa', 'Versicolor', 'Virginica'])
+axes[1].set_title('Chi-Square\nSpecies vs Petal Width Category')
+for i in range(3):
+    for j in range(2):
+        axes[1].text(j, i, contingency[i, j], ha='center', va='center', fontsize=12)
+
+
+axes[2].boxplot([grp_setosa, grp_versicolor, grp_virginica],
+                labels=['Setosa', 'Versicolor', 'Virginica'],
                 patch_artist=True, boxprops=dict(facecolor='lightyellow'))
-axes[2].set_title('One-Way ANOVA\nFertilizer Groups')
-axes[2].set_ylabel('Yield')
+axes[2].set_title('One-Way ANOVA\nPetal Length by Species')
+axes[2].set_ylabel('Petal Length (cm)')
 
 plt.tight_layout()
 plt.savefig('assignment3_hypothesis.png', dpi=150, bbox_inches='tight')
@@ -380,17 +390,12 @@ PySpark + SQL on Book Dataset:
 ---
 
 ```python
-# ============================================================
-# ASSIGNMENT 4: Data Wrangling (IRIS) + PySpark + SQL (Books)
-# ============================================================
-
-# ── INSTALL ────────────────────────────────────────────────
 !apt-get install -y openjdk-11-jdk-headless -qq > /dev/null
 !pip install pyspark pandas numpy matplotlib seaborn --quiet
 import os
 os.environ["JAVA_HOME"] = "/usr/lib/jvm/java-11-openjdk-amd64"
+print("✅ Java + PySpark installed")
 
-# ── IMPORTS ────────────────────────────────────────────────
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -411,19 +416,15 @@ print("\n🔹 First 5 rows:\n", df.head())
 print("\n🔹 Missing values:\n", df.isnull().sum())
 print("\n🔹 Descriptive stats:\n", df.describe().round(3))
 
-# Group-wise statistics
 print("\n🔹 Mean per species:")
 print(df.groupby('species')[['sepal_length','petal_length']].mean().round(3))
 
-# Filter: sepal_length > 6.0
 filtered = df[df['sepal_length'] > 6.0]
 print(f"\n🔹 Rows with sepal_length > 6.0: {len(filtered)}")
 
-# New feature: petal_ratio
 df['petal_ratio'] = (df['petal_length'] / df['petal_width']).round(3)
 print("\n🔹 Petal ratio (first 5):\n", df[['species','petal_ratio']].head())
 
-# Visualise
 fig, axes = plt.subplots(1, 2, figsize=(12, 5))
 sns.boxplot(data=df, x='species', y='sepal_length', ax=axes[0], palette='Set2')
 axes[0].set_title('Sepal Length by Species')
@@ -440,8 +441,8 @@ spark = SparkSession.builder \
     .master("local[*]") \
     .getOrCreate()
 spark.sparkContext.setLogLevel("ERROR")
+print("✅ SparkSession created")
 
-# Create Book Dataset
 book_data = [
     (1, "The Great Gatsby",         "F. Scott Fitzgerald", "Fiction",    1925, 4.1, 500000),
     (2, "To Kill a Mockingbird",    "Harper Lee",          "Fiction",    1960, 4.3, 750000),
@@ -461,7 +462,6 @@ books_df.registerTempTable("books")
 print("\n🔹 Schema:"); books_df.printSchema()
 print("\n🔹 All Books:"); books_df.show(truncate=False)
 
-# SQL Query 1: Top-rated books
 print("🔹 SQL — Top 5 Rated Books:")
 spark.sql("""
     SELECT title, author, rating
@@ -470,7 +470,6 @@ spark.sql("""
     LIMIT 5
 """).show(truncate=False)
 
-# SQL Query 2: Genre-wise average rating
 print("🔹 SQL — Average Rating per Genre:")
 spark.sql("""
     SELECT genre,
@@ -482,7 +481,6 @@ spark.sql("""
     ORDER BY avg_rating DESC
 """).show()
 
-# SQL Query 3: Books after 1950
 print("🔹 SQL — Books Published After 1950:")
 spark.sql("SELECT title, year, genre FROM books WHERE year > 1950 ORDER BY year").show(truncate=False)
 
@@ -501,11 +499,11 @@ spark.stop()
 
 ## Assignment 5
 
-## 📉 Linear Regression — Boston Housing Dataset
+## 📉 Linear Regression — Iris Dataset
 
 ### 🧠 Algorithm
 ```
-1. Load / generate Boston-style housing dataset
+1. Load Iris dataset
 2. Exploratory analysis — correlations, scatter plots
 3. Split data: 80% train, 20% test
 4. Fit Linear Regression model (sklearn)
@@ -521,75 +519,43 @@ spark.stop()
 ---
 
 ```python
-# ============================================================
-# ASSIGNMENT 5: Linear Regression — Boston Housing
-# ============================================================
-
-# ── INSTALL ────────────────────────────────────────────────
 !pip install numpy pandas matplotlib seaborn scikit-learn --quiet
 
-# ── IMPORTS ────────────────────────────────────────────────
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
+from sklearn.datasets import load_iris
 from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 from sklearn.preprocessing import StandardScaler
 
-print("✅ Libraries loaded")
-np.random.seed(42)
 
-# ── DATASET (Boston-style synthetic — avoids deprecation) ──
-n = 506
-crime_rate  = np.random.exponential(3.6, n)
-rooms       = np.random.normal(6.3, 0.7, n)
-age         = np.random.uniform(2, 100, n)
-distance    = np.random.exponential(3.8, n)
-tax         = np.random.normal(408, 170, n)
-ptratio     = np.random.normal(18.5, 2.1, n)
-
-# House price (target) with realistic weights + noise
-price = (
-    -0.9 * crime_rate
-    + 5.8 * rooms
-    - 0.05 * age
-    - 0.8 * distance
-    - 0.01 * tax
-    - 0.5 * ptratio
-    + np.random.normal(0, 3, n)
-    + 10
-)
-
-df = pd.DataFrame({
-    'CRIM': crime_rate, 'RM': rooms, 'AGE': age,
-    'DIS': distance, 'TAX': tax, 'PTRATIO': ptratio,
-    'MEDV': price
-})
+iris = load_iris()
+df = pd.DataFrame(iris.data, columns=['sepal_length', 'sepal_width',
+                                       'petal_length', 'petal_width'])
+df['species_id'] = iris.target
+print(f"📦 Iris Dataset loaded: {df.shape}")
 
 print("\n🔹 Dataset shape:", df.shape)
 print("\n🔹 Descriptive Stats:\n", df.describe().round(3))
 
-# ── CORRELATION ────────────────────────────────────────────
-print("\n🔹 Correlation with MEDV:\n",
-      df.corr()['MEDV'].sort_values(ascending=False).round(3))
+print("\n🔹 Correlation with petal_length:\n",
+      df.corr()['petal_length'].sort_values(ascending=False).round(3))
 
-# ── TRAIN/TEST SPLIT ───────────────────────────────────────
-X = df.drop('MEDV', axis=1)
-y = df['MEDV']
+X = df.drop('petal_length', axis=1)
+y = df['petal_length']
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
 scaler = StandardScaler()
 X_train_sc = scaler.fit_transform(X_train)
 X_test_sc  = scaler.transform(X_test)
 
-# ── MODEL ──────────────────────────────────────────────────
 model = LinearRegression()
 model.fit(X_train_sc, y_train)
 y_pred = model.predict(X_test_sc)
 
-# ── METRICS ────────────────────────────────────────────────
 mae  = mean_absolute_error(y_test, y_pred)
 mse  = mean_squared_error(y_test, y_pred)
 rmse = np.sqrt(mse)
@@ -601,55 +567,47 @@ print(f"  MSE  = {mse:.4f}")
 print(f"  RMSE = {rmse:.4f}")
 print(f"  R²   = {r2:.4f}")
 
-# Coefficients
 coef_df = pd.DataFrame({'Feature': X.columns, 'Coefficient': model.coef_})
 print("\n🔹 Coefficients:\n", coef_df.sort_values('Coefficient', ascending=False).to_string(index=False))
 
-# ── VISUALISATION ──────────────────────────────────────────
 fig, axes = plt.subplots(2, 3, figsize=(16, 10))
-fig.suptitle('Assignment 5 — Linear Regression: Boston Housing', fontsize=15, fontweight='bold')
+fig.suptitle('Assignment 5 — Linear Regression: Iris Dataset (Predict Petal Length)', fontsize=15, fontweight='bold')
 
-# 1. Scatter: RM vs MEDV
-axes[0,0].scatter(df['RM'], df['MEDV'], alpha=0.4, color='steelblue')
-m, b = np.polyfit(df['RM'], df['MEDV'], 1)
-xr = np.linspace(df['RM'].min(), df['RM'].max(), 100)
+axes[0,0].scatter(df['sepal_length'], df['petal_length'], alpha=0.4, color='steelblue')
+m, b = np.polyfit(df['sepal_length'], df['petal_length'], 1)
+xr = np.linspace(df['sepal_length'].min(), df['sepal_length'].max(), 100)
 axes[0,0].plot(xr, m*xr+b, 'r-', linewidth=2)
-axes[0,0].set_title('Scatter: Rooms vs Price')
-axes[0,0].set_xlabel('RM'); axes[0,0].set_ylabel('MEDV')
+axes[0,0].set_title('Scatter: Sepal Length vs Petal Length')
+axes[0,0].set_xlabel('Sepal Length (cm)'); axes[0,0].set_ylabel('Petal Length (cm)')
 
-# 2. Scatter: CRIM vs MEDV
-axes[0,1].scatter(df['CRIM'], df['MEDV'], alpha=0.4, color='coral')
-axes[0,1].set_title('Scatter: Crime Rate vs Price')
-axes[0,1].set_xlabel('CRIM'); axes[0,1].set_ylabel('MEDV')
+axes[0,1].scatter(df['petal_width'], df['petal_length'], alpha=0.4, color='coral')
+axes[0,1].set_title('Scatter: Petal Width vs Petal Length')
+axes[0,1].set_xlabel('Petal Width (cm)'); axes[0,1].set_ylabel('Petal Length (cm)')
 
-# 3. Correlation heatmap
 corr = df.corr()
 sns.heatmap(corr, annot=True, fmt='.2f', cmap='coolwarm', ax=axes[0,2], linewidths=0.5)
 axes[0,2].set_title('Correlation Matrix')
 
-# 4. Actual vs Predicted
 axes[1,0].scatter(y_test, y_pred, alpha=0.5, color='purple')
 mn = min(y_test.min(), y_pred.min())
 mx = max(y_test.max(), y_pred.max())
 axes[1,0].plot([mn, mx], [mn, mx], 'r--', linewidth=2, label='Perfect Fit')
 axes[1,0].set_title(f'Actual vs Predicted (R²={r2:.3f})')
-axes[1,0].set_xlabel('Actual'); axes[1,0].set_ylabel('Predicted')
+axes[1,0].set_xlabel('Actual Petal Length'); axes[1,0].set_ylabel('Predicted Petal Length')
 axes[1,0].legend()
 
-# 5. Residuals
 residuals = y_test - y_pred
 axes[1,1].scatter(y_pred, residuals, alpha=0.5, color='darkorange')
 axes[1,1].axhline(0, color='red', linestyle='--')
 axes[1,1].set_title('Residual Plot')
 axes[1,1].set_xlabel('Predicted'); axes[1,1].set_ylabel('Residuals')
 
-# 6. KDE of residuals
 axes[1,2].set_title('KDE — Residual Distribution')
 from scipy.stats import gaussian_kde
 kde_vals = gaussian_kde(residuals)
 x_res = np.linspace(residuals.min(), residuals.max(), 300)
 axes[1,2].plot(x_res, kde_vals(x_res), 'b-', linewidth=2, label='KDE')
-axes[1,2].hist(residuals, bins=25, density=True, alpha=0.4, color='skyblue', label='Histogram')
+axes[1,2].hist(residuals, bins=15, density=True, alpha=0.4, color='skyblue', label='Histogram')
 axes[1,2].axvline(0, color='red', linestyle='--')
 axes[1,2].set_xlabel('Residual'); axes[1,2].set_ylabel('Density')
 axes[1,2].legend()
@@ -691,18 +649,12 @@ K-Means Clustering (PySpark):
 ---
 
 ```python
-# ============================================================
-# ASSIGNMENT 6: Logistic Regression (IRIS) + K-Means (PySpark)
-# ============================================================
-
-# ── INSTALL ────────────────────────────────────────────────
 !apt-get install -y openjdk-11-jdk-headless -qq > /dev/null
 !pip install pyspark scikit-learn pandas numpy matplotlib seaborn --quiet
 import os
 os.environ["JAVA_HOME"] = "/usr/lib/jvm/java-11-openjdk-amd64"
 print("✅ All dependencies installed")
 
-# ── IMPORTS ────────────────────────────────────────────────
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -717,6 +669,7 @@ from pyspark.sql import SparkSession
 from pyspark.ml.feature import VectorAssembler, StandardScaler as SparkScaler
 from pyspark.ml.clustering import KMeans
 from pyspark.ml.evaluation import ClusteringEvaluator
+
 
 
 iris = load_iris()
@@ -738,6 +691,7 @@ acc = accuracy_score(y_test, y_pred)
 print(f"\n  Accuracy: {acc:.4f}  ({acc*100:.2f}%)")
 print("\n📊 Classification Report:")
 print(classification_report(y_test, y_pred, target_names=target_names))
+
 
 
 spark = SparkSession.builder \
@@ -771,17 +725,14 @@ pred_pd = predictions.select('sepal_length','sepal_width','petal_length',
                                'petal_width','true_label','prediction').toPandas()
 spark.stop()
 
-# ── VISUALISATION ──────────────────────────────────────────
 fig, axes = plt.subplots(1, 3, figsize=(16, 5))
 fig.suptitle('Assignment 6 — Logistic Regression & K-Means', fontsize=14, fontweight='bold')
 
-# Confusion matrix
 cm = confusion_matrix(y_test, y_pred)
 disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=target_names)
 disp.plot(ax=axes[0], cmap='Blues', colorbar=False)
 axes[0].set_title(f'Confusion Matrix\nAccuracy: {acc:.3f}')
 
-# K-Means clusters (petal_length vs petal_width)
 scatter_colors = ['#e74c3c','#2ecc71','#3498db']
 for cluster in range(3):
     mask = pred_pd['prediction'] == cluster
@@ -792,7 +743,6 @@ axes[1].set_title(f'K-Means Clusters\nSilhouette={silhouette:.3f}')
 axes[1].set_xlabel('Petal Length'); axes[1].set_ylabel('Petal Width')
 axes[1].legend()
 
-# True labels (ground truth)
 true_colors = ['#e74c3c','#2ecc71','#3498db']
 for label, name in enumerate(target_names):
     mask = pred_pd['true_label'] == label
@@ -839,18 +789,12 @@ ACTIONS (eager — trigger computation, return result):
 ---
 
 ```python
-# ============================================================
-# ASSIGNMENT 7: RDD Actions & Transformations — Apache Spark
-# ============================================================
-
-# ── INSTALL ────────────────────────────────────────────────
 !apt-get install -y openjdk-11-jdk-headless -qq > /dev/null
 !pip install pyspark --quiet
 import os
 os.environ["JAVA_HOME"] = "/usr/lib/jvm/java-11-openjdk-amd64"
-print("✅ PySpark installed")
 
-# ── IMPORTS ────────────────────────────────────────────────
+
 from pyspark import SparkContext, SparkConf
 from pyspark.sql import SparkSession
 import re
@@ -865,31 +809,20 @@ fruits_rdd = sc.parallelize(["apple","banana","cherry","apple","mango","banana",
 print("  Numbers RDD:", nums_rdd.collect())
 print("  Fruits RDD :", fruits_rdd.collect())
 
-# ════════════════════════════════════════════════════════════
-# 2. TRANSFORMATIONS
-# ════════════════════════════════════════════════════════════
-print("\n" + "="*55)
-print("2. Transformations (Lazy)")
-print("="*55)
 
-# map
 squared = nums_rdd.map(lambda x: x**2)
 print("  map (x²)          :", squared.collect())
 
-# filter
 evens = nums_rdd.filter(lambda x: x % 2 == 0)
 print("  filter (even)     :", evens.collect())
 
-# distinct
 distinct_nums = nums_rdd.distinct()
 print("  distinct          :", sorted(distinct_nums.collect()))
 
-# flatMap
 words_rdd = sc.parallelize(["Hello World", "Apache Spark", "Big Data"])
 flat = words_rdd.flatMap(lambda s: s.split())
 print("  flatMap (words)   :", flat.collect())
 
-# sortBy
 sorted_rdd = nums_rdd.sortBy(lambda x: x, ascending=False)
 print("  sortBy (desc)     :", sorted_rdd.collect())
 
@@ -900,29 +833,26 @@ print("  union             :", rdd_a.union(rdd_b).collect())
 print("  intersection      :", rdd_a.intersection(rdd_b).collect())
 
 
+
 sales = sc.parallelize([
     ("Electronics", 1500), ("Clothing", 800),  ("Electronics", 2200),
     ("Food", 400),         ("Clothing", 1200),  ("Food", 600),
     ("Electronics", 900),  ("Clothing", 300),
 ])
 
-# reduceByKey
 total_by_dept = sales.reduceByKey(lambda a, b: a + b)
 print("  reduceByKey (total sales):")
 for dept, total in sorted(total_by_dept.collect()):
     print(f"    {dept:15s}: ₹{total}")
 
-# countByValue
 fruit_counts = fruits_rdd.countByValue()
 print("\n  countByValue (fruits):", dict(fruit_counts))
 
-# groupByKey
 grouped = sales.groupByKey().mapValues(list)
 print("\n  groupByKey (sales values):")
 for dept, vals in sorted(grouped.collect()):
     print(f"    {dept:15s}: {vals}")
 
-# sortBy on pairs
 sorted_sales = total_by_dept.sortBy(lambda x: x[1], ascending=False)
 print("\n  sortBy value (descending):", sorted_sales.collect())
 
@@ -937,12 +867,6 @@ print(f"  max()      : {nums_rdd.max()}")
 print(f"  min()      : {nums_rdd.min()}")
 print(f"  reduce(+)  : {nums_rdd.reduce(lambda a,b: a+b)}")
 
-# ════════════════════════════════════════════════════════════
-# 5. WORD COUNT (Classic MapReduce with RDDs)
-# ════════════════════════════════════════════════════════════
-print("\n" + "="*55)
-print("5. Word Count — MapReduce with RDDs")
-print("="*55)
 
 text_data = [
     "Spark is fast and reliable",
@@ -963,6 +887,9 @@ print("  Word Counts (top 10):")
 for word, count in word_count.take(10):
     print(f"    {word:20s}: {count}")
 
+print("\n" + "="*55)
+print("6. Persist & Cache")
+print("="*55)
 cached = total_by_dept.cache()
 print("  RDD cached. Count:", cached.count())
 print("  Accessing again (from cache):", cached.collect())
@@ -1009,18 +936,12 @@ Problems implemented:
 ---
 
 ```python
-# ============================================================
-# ASSIGNMENT 8: MapReduce — Hadoop & PySpark
-# ============================================================
 
-# ── INSTALL ────────────────────────────────────────────────
-!apt-get install -y openjdk-17-jdk-headless -qq
-
+!apt-get install -y openjdk-11-jdk-headless -qq > /dev/null
+!pip install pyspark --quiet
 import os
-os.environ["JAVA_HOME"] = "/usr/lib/jvm/java-17-openjdk-amd64"
-os.environ["PATH"] = os.environ["JAVA_HOME"] + "/bin:" + os.environ["PATH"]
+os.environ["JAVA_HOME"] = "/usr/lib/jvm/java-11-openjdk-amd64"
 
-# ── IMPORTS ────────────────────────────────────────────────
 from pyspark import SparkContext, SparkConf
 from pyspark.sql import SparkSession
 import re, math
@@ -1028,6 +949,7 @@ import re, math
 conf = SparkConf().setAppName("MapReduce_Demo").setMaster("local[*]")
 sc   = SparkContext(conf=conf)
 sc.setLogLevel("ERROR")
+
 
 
 documents = [
@@ -1041,7 +963,6 @@ documents = [
 
 text_rdd = sc.parallelize(documents)
 
-# MAP → SHUFFLE → REDUCE
 word_count_rdd = (
     text_rdd
     .flatMap(lambda line: re.findall(r'\b\w+\b', line.lower()))   # MAP
@@ -1057,7 +978,6 @@ for word, cnt in word_count_rdd.take(15):
     print(f"  {word:<20} {cnt:>5}")
 
 
-
 transactions = [
     ("Electronics", 1500), ("Clothing", 800),  ("Electronics", 2200),
     ("Food", 400),         ("Clothing", 1200),  ("Food", 600),
@@ -1068,10 +988,8 @@ transactions = [
 
 sales_rdd = sc.parallelize(transactions)
 
-# MAP: (category, amount) → already in key-value form
-# REDUCE: aggregate stats
+
 def reduce_stats(a, b):
-    # a, b are (total, count, max_val)
     return (a[0]+b[0], a[1]+b[1], max(a[2], b[2]))
 
 sales_stats = (
