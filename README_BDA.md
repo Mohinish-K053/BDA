@@ -385,9 +385,11 @@ PySpark + SQL on Book Dataset:
 ```python
 !apt-get install -y openjdk-11-jdk-headless -qq > /dev/null
 !pip install pyspark pandas numpy matplotlib seaborn --quiet
+!apt-get install -y openjdk-17-jdk-headless -qq
+
 import os
-os.environ["JAVA_HOME"] = "/usr/lib/jvm/java-11-openjdk-amd64"
-print("✅ Java + PySpark installed")
+os.environ["JAVA_HOME"] = "/usr/lib/jvm/java-17-openjdk-amd64"
+os.environ["PATH"] = os.environ["JAVA_HOME"] + "/bin:" + os.environ["PATH"]
 
 import numpy as np
 import pandas as pd
@@ -434,7 +436,6 @@ spark = SparkSession.builder \
     .master("local[*]") \
     .getOrCreate()
 spark.sparkContext.setLogLevel("ERROR")
-print("✅ SparkSession created")
 
 book_data = [
     (1, "The Great Gatsby",         "F. Scott Fitzgerald", "Fiction",    1925, 4.1, 500000),
@@ -644,9 +645,11 @@ K-Means Clustering (PySpark):
 ```python
 !apt-get install -y openjdk-11-jdk-headless -qq > /dev/null
 !pip install pyspark scikit-learn pandas numpy matplotlib seaborn --quiet
+!apt-get install -y openjdk-17-jdk-headless -qq
+
 import os
-os.environ["JAVA_HOME"] = "/usr/lib/jvm/java-11-openjdk-amd64"
-print("✅ All dependencies installed")
+os.environ["JAVA_HOME"] = "/usr/lib/jvm/java-17-openjdk-amd64"
+os.environ["PATH"] = os.environ["JAVA_HOME"] + "/bin:" + os.environ["PATH"]
 
 import numpy as np
 import pandas as pd
@@ -784,8 +787,11 @@ ACTIONS (eager — trigger computation, return result):
 ```python
 !apt-get install -y openjdk-11-jdk-headless -qq > /dev/null
 !pip install pyspark --quiet
+!apt-get install -y openjdk-17-jdk-headless -qq
+
 import os
-os.environ["JAVA_HOME"] = "/usr/lib/jvm/java-11-openjdk-amd64"
+os.environ["JAVA_HOME"] = "/usr/lib/jvm/java-17-openjdk-amd64"
+os.environ["PATH"] = os.environ["JAVA_HOME"] + "/bin:" + os.environ["PATH"]
 
 
 from pyspark import SparkContext, SparkConf
@@ -932,8 +938,11 @@ Problems implemented:
 
 !apt-get install -y openjdk-11-jdk-headless -qq > /dev/null
 !pip install pyspark --quiet
+!apt-get install -y openjdk-17-jdk-headless -qq
+
 import os
-os.environ["JAVA_HOME"] = "/usr/lib/jvm/java-11-openjdk-amd64"
+os.environ["JAVA_HOME"] = "/usr/lib/jvm/java-17-openjdk-amd64"
+os.environ["PATH"] = os.environ["JAVA_HOME"] + "/bin:" + os.environ["PATH"]
 
 from pyspark import SparkContext, SparkConf
 from pyspark.sql import SparkSession
