@@ -67,7 +67,6 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from scipy import stats
 
-print("✅ Libraries loaded successfully")
 
 # ── DATA GENERATION ────────────────────────────────────────
 np.random.seed(42)
@@ -162,16 +161,6 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from scipy import stats
 
-print("✅ Libraries loaded")
-
-# ════════════════════════════════════════════════════════════
-# PROBLEM 1: Student Exam Scores — Normal Distribution
-# A class of 1000 students has mean score 65, std 12.
-# What % scored above 80? Below 50?
-# ════════════════════════════════════════════════════════════
-print("\n" + "="*55)
-print("PROBLEM 1: Exam Scores — Normal Distribution")
-print("="*55)
 
 mu, sigma = 65, 12
 dist_norm = stats.norm(mu, sigma)
@@ -185,13 +174,6 @@ print(f"  P(score > 80)       = {p_above_80:.4f}  ({p_above_80*100:.2f}%)")
 print(f"  P(score < 50)       = {p_below_50:.4f}  ({p_below_50*100:.2f}%)")
 print(f"  P(50 < score < 80)  = {p_between:.4f}  ({p_between*100:.2f}%)")
 
-# ════════════════════════════════════════════════════════════
-# PROBLEM 2: Customer Arrivals — Poisson Distribution
-# A shop gets avg 5 customers/hour. P(exactly 3)? P(>7)?
-# ════════════════════════════════════════════════════════════
-print("\n" + "="*55)
-print("PROBLEM 2: Customer Arrivals — Poisson Distribution")
-print("="*55)
 
 lam = 5
 dist_poisson = stats.poisson(lam)
@@ -292,7 +274,6 @@ import matplotlib.pyplot as plt
 from scipy import stats
 from statsmodels.stats.weightstats import ztest
 
-print("✅ Libraries loaded")
 np.random.seed(42)
 ALPHA = 0.05
 
@@ -303,57 +284,24 @@ def print_result(test_name, stat, p_val, alpha=ALPHA):
     decision = "✅ Reject H0" if p_val < alpha else "❌ Fail to Reject H0"
     print(f"  Decision  : {decision}  (α = {alpha})")
 
-# ════════════════════════════════════════════════════════════
-# TEST 1: One-Sample t-test
-# H0: Mean student height = 170 cm
-# H1: Mean student height ≠ 170 cm
-# ════════════════════════════════════════════════════════════
-print("\n" + "="*55)
-print("TEST 1: One-Sample t-test")
-print("  H0: μ = 170 cm  |  H1: μ ≠ 170 cm")
-print("="*55)
+
 heights = np.random.normal(loc=172, scale=8, size=30)
 t_stat, p_val = stats.ttest_1samp(heights, popmean=170)
 print(f"  Sample mean: {heights.mean():.2f} cm")
 print_result("One-Sample t-test", t_stat, p_val)
 
-# ════════════════════════════════════════════════════════════
-# TEST 2: Two-Sample t-test
-# H0: Mean scores of Group A = Group B
-# H1: Mean scores differ
-# ════════════════════════════════════════════════════════════
-print("\n" + "="*55)
-print("TEST 2: Two-Sample t-test")
-print("  H0: μ_A = μ_B  |  H1: μ_A ≠ μ_B")
-print("="*55)
 group_a = np.random.normal(loc=75, scale=10, size=40)
 group_b = np.random.normal(loc=70, scale=10, size=40)
 t_stat, p_val = stats.ttest_ind(group_a, group_b)
 print(f"  Mean A: {group_a.mean():.2f}  |  Mean B: {group_b.mean():.2f}")
 print_result("Independent t-test", t_stat, p_val)
 
-# ════════════════════════════════════════════════════════════
-# TEST 3: Z-test
-# H0: μ = 50  |  H1: μ > 50 (one-tailed)
-# ════════════════════════════════════════════════════════════
-print("\n" + "="*55)
-print("TEST 3: Z-test (large sample)")
-print("  H0: μ = 50  |  H1: μ > 50")
-print("="*55)
 large_sample = np.random.normal(loc=52, scale=15, size=200)
 z_stat, p_val = ztest(large_sample, value=50, alternative='larger')
 print(f"  Sample mean: {large_sample.mean():.2f}")
 print_result("Z-test (one-tailed)", z_stat, p_val)
 
-# ════════════════════════════════════════════════════════════
-# TEST 4: Chi-Square Test of Independence
-# H0: Gender and product preference are independent
-# H1: They are associated
-# ════════════════════════════════════════════════════════════
-print("\n" + "="*55)
-print("TEST 4: Chi-Square Test of Independence")
-print("  H0: Gender ⊥ Product Preference  |  H1: Associated")
-print("="*55)
+
 contingency = np.array([[30, 10, 20],
                          [15, 25, 10]])
 chi2, p_val, dof, expected = stats.chi2_contingency(contingency)
@@ -361,15 +309,7 @@ print(f"  Observed table:\n{contingency}")
 print(f"  Degrees of Freedom: {dof}")
 print_result("Chi-Square", chi2, p_val)
 
-# ════════════════════════════════════════════════════════════
-# TEST 5: One-Way ANOVA
-# H0: Mean yield is same across 3 fertilizer groups
-# H1: At least one group mean differs
-# ════════════════════════════════════════════════════════════
-print("\n" + "="*55)
-print("TEST 5: One-Way ANOVA")
-print("  H0: μ1 = μ2 = μ3  |  H1: At least one differs")
-print("="*55)
+
 fert_A = np.random.normal(loc=50, scale=5, size=20)
 fert_B = np.random.normal(loc=55, scale=5, size=20)
 fert_C = np.random.normal(loc=52, scale=5, size=20)
@@ -449,7 +389,6 @@ PySpark + SQL on Book Dataset:
 !pip install pyspark pandas numpy matplotlib seaborn --quiet
 import os
 os.environ["JAVA_HOME"] = "/usr/lib/jvm/java-11-openjdk-amd64"
-print("✅ Java + PySpark installed")
 
 # ── IMPORTS ────────────────────────────────────────────────
 import numpy as np
@@ -460,12 +399,6 @@ from sklearn.datasets import load_iris
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import col, avg, count, desc, upper, length
 
-# ════════════════════════════════════════════════════════════
-# PART A: IRIS Data Wrangling with Pandas
-# ════════════════════════════════════════════════════════════
-print("\n" + "="*55)
-print("PART A: IRIS Dataset — Data Wrangling")
-print("="*55)
 
 iris = load_iris()
 df = pd.DataFrame(iris.data, columns=['sepal_length','sepal_width',
@@ -501,19 +434,12 @@ plt.tight_layout()
 plt.savefig('assignment4_iris_wrangling.png', dpi=150, bbox_inches='tight')
 plt.show()
 
-# ════════════════════════════════════════════════════════════
-# PART B: PySpark + SQL on Book Dataset
-# ════════════════════════════════════════════════════════════
-print("\n" + "="*55)
-print("PART B: PySpark + SQL — Book Dataset")
-print("="*55)
 
 spark = SparkSession.builder \
     .appName("BookDatasetAnalysis") \
     .master("local[*]") \
     .getOrCreate()
 spark.sparkContext.setLogLevel("ERROR")
-print("✅ SparkSession created")
 
 # Create Book Dataset
 book_data = [
@@ -792,14 +718,6 @@ from pyspark.ml.feature import VectorAssembler, StandardScaler as SparkScaler
 from pyspark.ml.clustering import KMeans
 from pyspark.ml.evaluation import ClusteringEvaluator
 
-print("✅ Imports done")
-
-# ════════════════════════════════════════════════════════════
-# PART A: Logistic Regression on IRIS
-# ════════════════════════════════════════════════════════════
-print("\n" + "="*55)
-print("PART A: Logistic Regression — IRIS Dataset")
-print("="*55)
 
 iris = load_iris()
 X = iris.data
@@ -821,12 +739,6 @@ print(f"\n  Accuracy: {acc:.4f}  ({acc*100:.2f}%)")
 print("\n📊 Classification Report:")
 print(classification_report(y_test, y_pred, target_names=target_names))
 
-# ════════════════════════════════════════════════════════════
-# PART B: K-Means Clustering with PySpark
-# ════════════════════════════════════════════════════════════
-print("\n" + "="*55)
-print("PART B: K-Means Clustering — PySpark")
-print("="*55)
 
 spark = SparkSession.builder \
     .appName("KMeansIRIS") \
@@ -946,14 +858,7 @@ import re
 conf = SparkConf().setAppName("RDD_Demo").setMaster("local[*]")
 sc   = SparkContext(conf=conf)
 sc.setLogLevel("ERROR")
-print("✅ SparkContext created")
 
-# ════════════════════════════════════════════════════════════
-# 1. BASIC RDD CREATION
-# ════════════════════════════════════════════════════════════
-print("\n" + "="*55)
-print("1. Creating RDDs")
-print("="*55)
 
 nums_rdd   = sc.parallelize([3, 1, 4, 1, 5, 9, 2, 6, 5, 3, 5])
 fruits_rdd = sc.parallelize(["apple","banana","cherry","apple","mango","banana","apple"])
@@ -994,12 +899,6 @@ rdd_b = sc.parallelize([3, 4, 5])
 print("  union             :", rdd_a.union(rdd_b).collect())
 print("  intersection      :", rdd_a.intersection(rdd_b).collect())
 
-# ════════════════════════════════════════════════════════════
-# 3. KEY-VALUE RDD TRANSFORMATIONS
-# ════════════════════════════════════════════════════════════
-print("\n" + "="*55)
-print("3. Key-Value Pair Transformations")
-print("="*55)
 
 sales = sc.parallelize([
     ("Electronics", 1500), ("Clothing", 800),  ("Electronics", 2200),
@@ -1027,12 +926,6 @@ for dept, vals in sorted(grouped.collect()):
 sorted_sales = total_by_dept.sortBy(lambda x: x[1], ascending=False)
 print("\n  sortBy value (descending):", sorted_sales.collect())
 
-# ════════════════════════════════════════════════════════════
-# 4. ACTIONS
-# ════════════════════════════════════════════════════════════
-print("\n" + "="*55)
-print("4. Actions (Eager Execution)")
-print("="*55)
 
 print(f"  count()    : {nums_rdd.count()}")
 print(f"  first()    : {nums_rdd.first()}")
@@ -1070,10 +963,6 @@ print("  Word Counts (top 10):")
 for word, count in word_count.take(10):
     print(f"    {word:20s}: {count}")
 
-# ── PERSIST / CACHE ────────────────────────────────────────
-print("\n" + "="*55)
-print("6. Persist & Cache")
-print("="*55)
 cached = total_by_dept.cache()
 print("  RDD cached. Count:", cached.count())
 print("  Accessing again (from cache):", cached.collect())
@@ -1139,16 +1028,7 @@ import re, math
 conf = SparkConf().setAppName("MapReduce_Demo").setMaster("local[*]")
 sc   = SparkContext(conf=conf)
 sc.setLogLevel("ERROR")
-print("✅ SparkContext created")
 
-# ════════════════════════════════════════════════════════════
-# MAPREDUCE 1: Word Count (Classic)
-# ════════════════════════════════════════════════════════════
-print("\n" + "="*60)
-print("MAPREDUCE 1: Word Frequency Count")
-print("  MAP    : each word → (word, 1)")
-print("  REDUCE : sum all 1s per word")
-print("="*60)
 
 documents = [
     "hadoop mapreduce processes large datasets in parallel",
@@ -1176,14 +1056,7 @@ print(f"  {'-'*25}")
 for word, cnt in word_count_rdd.take(15):
     print(f"  {word:<20} {cnt:>5}")
 
-# ════════════════════════════════════════════════════════════
-# MAPREDUCE 2: Sales Analytics per Category
-# ════════════════════════════════════════════════════════════
-print("\n" + "="*60)
-print("MAPREDUCE 2: Sales Analytics by Category")
-print("  MAP    : transaction → (category, amount)")
-print("  REDUCE : compute total, count, max, avg per category")
-print("="*60)
+
 
 transactions = [
     ("Electronics", 1500), ("Clothing", 800),  ("Electronics", 2200),
@@ -1215,14 +1088,6 @@ print(f"  {'-'*47}")
 for cat, total, cnt, avg, mx in sales_stats.collect():
     print(f"  {cat:<15} {total:>8} {cnt:>6} {avg:>9} {mx:>7}")
 
-# ════════════════════════════════════════════════════════════
-# MAPREDUCE 3: Log File Analysis
-# ════════════════════════════════════════════════════════════
-print("\n" + "="*60)
-print("MAPREDUCE 3: Log File Analysis")
-print("  MAP    : log line → (log_level, 1)")
-print("  REDUCE : count occurrences per level")
-print("="*60)
 
 log_lines = [
     "2024-01-15 10:23:01 ERROR Database connection failed",
@@ -1257,14 +1122,6 @@ for level, cnt in log_levels.collect():
     pct = cnt / total_logs * 100
     print(f"  {level:<10} {cnt:>6} {pct:>10.1f}%")
 
-# ════════════════════════════════════════════════════════════
-# MAPREDUCE 4: Student Grade Statistics
-# ════════════════════════════════════════════════════════════
-print("\n" + "="*60)
-print("MAPREDUCE 4: Student Grade Statistics by Subject")
-print("  MAP    : (student, subject, marks) → (subject, marks)")
-print("  REDUCE : compute avg, max, pass% per subject")
-print("="*60)
 
 student_records = [
     ("Alice",   "Math",    85), ("Bob",   "Math",    72), ("Carol", "Math",    91),
@@ -1294,14 +1151,6 @@ print(f"  {'-'*40}")
 for subj, avg, mx, cnt, pp in subject_stats.collect():
     print(f"  {subj:<10} {avg:>6} {mx:>5} {cnt:>9} {pp:>6}%")
 
-# ════════════════════════════════════════════════════════════
-# MAPREDUCE 5: Inverted Index
-# ════════════════════════════════════════════════════════════
-print("\n" + "="*60)
-print("MAPREDUCE 5: Inverted Index (word → documents)")
-print("  MAP    : (doc_id, word) → (word, doc_id)")
-print("  REDUCE : for each word, collect all doc_ids")
-print("="*60)
 
 docs = [
     (1, "spark hadoop mapreduce big data"),
